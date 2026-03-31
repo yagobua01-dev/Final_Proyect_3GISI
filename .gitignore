@@ -1,0 +1,17 @@
+# Dataset and Images (Do NOT upload to GitHub)
+data/
+
+# Generated Embeddings and FAISS indexes
+embeddings/
+
+# Python virtual environments
+venv/
+.venv/
+env/
+
+# Python cache and compiled files
+__pycache__/
+*.pyc
+
+# OS generated files
+.DS_Store
