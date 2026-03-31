@@ -20,7 +20,7 @@ with open(PATHS_FILE, "r") as f:
 
 print(f"Loaded {image_embeddings.shape[0]} embeddings.")
 
-# 3. Initialize FAISS Index (Advanced Machine Learning: Vector Search)
+# 3. Initialize FAISS Index
 dimension = image_embeddings.shape[1]  # 512
 index = faiss.IndexFlatIP(dimension)
 index.add(image_embeddings)
@@ -36,7 +36,7 @@ def search_images(query_text, top_k=5):
     """
     Converts text to an embedding and searches the FAISS index.
     """
-    # FIX: We create a blank dummy image to satisfy the multimodal model's requirement
+    # We create a blank dummy image to satisfy the multimodal model's requirement
     dummy_image = Image.new('RGB', (224, 224), (0, 0, 0))
     
     # Process both text and dummy image
@@ -49,7 +49,7 @@ def search_images(query_text, top_k=5):
         # Explicitly extract the text embeddings
         text_features = outputs.text_embeds
         
-        # Normalize the vector (crucial for cosine similarity)
+        # Normalize the vector
         text_features = text_features / text_features.norm(p=2, dim=-1, keepdim=True)
         
     # Convert to numpy array for FAISS
