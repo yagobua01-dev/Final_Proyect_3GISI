@@ -45,8 +45,9 @@ print("All systems go! Launching UI...")
 # CORE LOGIC
 
 def get_text_embedding(query_text):
-    dummy_image = Image.new('RGB', (224, 224), (0, 0, 0))
-    inputs = processor(text=[query_text], images=dummy_image, return_tensors="pt", padding=True)
+    if input_image.mode != "RGB":
+        input_image = input_image.convert("RGB")
+    inputs = processor(images=input_image, return_tensors="pt", padding=True)
     with torch.no_grad():
         text_features = model(**inputs).text_embeds
         text_features = text_features / text_features.norm(p=2, dim=-1, keepdim=True)
@@ -151,7 +152,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
             text_box = gr.Textbox(label="Text Query", placeholder="e.g. A dog playing with a red ball...")
             gr.Markdown("**OR**")
             audio_box = gr.Audio(sources=["microphone"], type="filepath", label="Voice Query (English)")
-            image_query_box = gr.Image(sources=["upload", "webcam"], type="pil", label="3. Búsqueda por Imagen (Inversa)")
+            image_query_box = gr.Image(sources=["upload", "webcam"], type="pil", label="3. Image Search")
             
             search_button = gr.Button("Search Images", variant="primary")
             status_text = gr.Textbox(label="System Status", interactive=False)
