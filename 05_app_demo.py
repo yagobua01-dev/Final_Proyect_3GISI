@@ -164,7 +164,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
     # Connect the UI elements to the python function
     search_button.click(
         fn=process_query, 
-        inputs=[text_box, audio_box], 
+        inputs=[text_box, audio_box, image_query_box], 
         outputs=[gallery, status_text]
     )
 
