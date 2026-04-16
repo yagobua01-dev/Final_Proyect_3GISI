@@ -23,3 +23,12 @@ TOP_K = 5          # We will calculate Recall@5
 
 print("Loading evaluation system...")
 
+# 2. Load FAISS Database
+image_embeddings = np.load(EMBEDDINGS_FILE)
+with open(PATHS_FILE, "r") as f:
+    image_paths = json.load(f)
+
+dimension = image_embeddings.shape[1]
+index = faiss.IndexFlatIP(dimension)
+index.add(image_embeddings)
+
