@@ -57,10 +57,15 @@ def get_text_embedding(query_text):
 
 def get_image_embedding(input_image):
     """Genera el embedding visual de la imagen de consulta."""
-    inputs = processor(images=input_image, return_tensors="pt", padding=True)
+    if isinstance(input_image, np.ndarray):
+        input_image = Image.fromarray(input_image)
+    if input_image.mode != "RGB":
+        input_image = input_image.convert("RGB")
+    inputs = processor(text=[""], images=input_image, return_tensors="pt", padding=True)
     with torch.no_grad():
-        image_features = model.get_image_features(**inputs)
-        # L2 Normalization (vital para FAISS)
+        outputs = model(**inputs)
+        image_features = outputs.image_embeds
+        # L2 Normalization
         image_features = image_features / image_features.norm(p=2, dim=-1, keepdim=True)
     return image_features.cpu().numpy().astype(np.float32)
 
