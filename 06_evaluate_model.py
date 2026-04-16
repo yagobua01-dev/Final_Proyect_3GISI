@@ -68,3 +68,14 @@ except FileNotFoundError:
     print(f"ERROR: Could not find {CAPTIONS_FILE}. Please make sure you downloaded the captions text file from Kaggle.")
     exit()
 
+# 5. Prepare Test Set
+# We only want to test images that we actually successfully processed in Phase 5
+processed_filenames = [os.path.basename(path) for path in image_paths]
+valid_test_images = [img for img in image_to_captions.keys() if img in processed_filenames]
+
+print(f"Found {len(valid_test_images)} valid images with captions.")
+
+# Pick a random sample to evaluate
+random.seed(42) # Seed for reproducibility
+test_sample = random.sample(valid_test_images, min(SAMPLE_SIZE, len(valid_test_images)))
+
