@@ -45,3 +45,26 @@ def get_text_embedding(query_text):
         text_features = text_features / text_features.norm(p=2, dim=-1, keepdim=True)
     return text_features.cpu().numpy().astype(np.float32)
 
+# 4. Load and Parse Captions
+print(f"Reading ground truth from {CAPTIONS_FILE}...")
+image_to_captions = {}
+
+try:
+    with open(CAPTIONS_FILE, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+        # Skip header if it exists (usually "image,caption")
+        if "image,caption" in lines[0].lower() or "image" in lines[0].lower():
+            lines = lines[1:]
+            
+        for line in lines:
+            parts = line.strip().split(",", 1)
+            if len(parts) == 2:
+                img_name, caption = parts
+                # Ensure the dictionary has a list for each image
+                if img_name not in image_to_captions:
+                    image_to_captions[img_name] = []
+                image_to_captions[img_name].append(caption)
+except FileNotFoundError:
+    print(f"ERROR: Could not find {CAPTIONS_FILE}. Please make sure you downloaded the captions text file from Kaggle.")
+    exit()
+
