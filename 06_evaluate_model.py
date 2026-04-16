@@ -32,3 +32,16 @@ dimension = image_embeddings.shape[1]
 index = faiss.IndexFlatIP(dimension)
 index.add(image_embeddings)
 
+# 3. Load CLIP Model
+model_id = "openai/clip-vit-base-patch32"
+model = CLIPModel.from_pretrained(model_id)
+processor = CLIPProcessor.from_pretrained(model_id)
+
+def get_text_embedding(query_text):
+    dummy_image = Image.new('RGB', (224, 224), (0, 0, 0))
+    inputs = processor(text=[query_text], images=dummy_image, return_tensors="pt", padding=True)
+    with torch.no_grad():
+        text_features = model(**inputs).text_embeds
+        text_features = text_features / text_features.norm(p=2, dim=-1, keepdim=True)
+    return text_features.cpu().numpy().astype(np.float32)
+
