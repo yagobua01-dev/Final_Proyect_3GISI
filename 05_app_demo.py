@@ -45,6 +45,8 @@ print("All systems go! Launching UI...")
 # CORE LOGIC
 
 def get_text_embedding(query_text):
+    if isinstance(input_image, np.ndarray):
+        input_image = Image.fromarray(input_image)
     if input_image.mode != "RGB":
         input_image = input_image.convert("RGB")
     inputs = processor(images=input_image, return_tensors="pt", padding=True)
@@ -99,48 +101,53 @@ def process_query(text_input, audio_input, image_input):
     Handles user input (Voice, Text, or Image).
     Generates the corresponding vector and performs the A* search.
     """
-    status_message = ""
-    query_vector = None
-    
-    # 1. Identificar el tipo de entrada y generar el vector
-    if audio_input is not None:
-        result = whisper_model.transcribe(audio_input)
-        raw_query = result["text"].strip()
-        status_message = f"[Audio] Buscando: '{raw_query}'"
-        query_vector = get_text_embedding(raw_query)
+    try:
+        status_message = ""
+        query_vector = None
         
-    elif text_input:
-        raw_query = text_input.strip()
-        status_message = f"[Texto] Buscando: '{raw_query}'"
-        query_vector = get_text_embedding(raw_query)
-        
-    elif image_input is not None:
-        status_message = f"[Imagen] Ejecutando búsqueda visual inversa..."
-        query_vector = get_image_embedding(image_input)
-        
-    else:
-        return [], "Por favor, proporciona texto, un audio o sube una imagen."
-        
-    # 2. Perform Multimodal Search
-    distances, indices = index.search(query_vector, 20)
-    
-    top_n_indices = indices[0]
-    top_n_scores = distances[0]
-    candidate_embeddings = image_embeddings[top_n_indices]
-    
-    # 3. Apply Intelligent Systems (A* Filter)
-    best_subset_local_indices = a_star_selection(query_vector, top_n_indices, top_n_scores, candidate_embeddings, k=5)
-    
-    # 4. Gather results for the UI Gallery
-    result_images = []
-    if best_subset_local_indices:
-        for local_idx in best_subset_local_indices:
-            global_idx = top_n_indices[local_idx]
-            path = image_paths[global_idx]
-            result_images.append(path)
+        # 1. Identificar el tipo de entrada y generar el vector
+        if audio_input is not None:
+            result = whisper_model.transcribe(audio_input)
+            raw_query = result["text"].strip()
+            status_message = f"[Audio] Buscando: '{raw_query}'"
+            query_vector = get_text_embedding(raw_query)
             
-    return result_images, status_message
+        elif text_input:
+            raw_query = text_input.strip()
+            status_message = f"[Texto] Buscando: '{raw_query}'"
+            query_vector = get_text_embedding(raw_query)
+            
+        elif image_input is not None:
+            status_message = f"[Imagen] Ejecutando búsqueda visual inversa..."
+            query_vector = get_image_embedding(image_input)
+            
+        else:
+            return [], "Por favor, proporciona texto, un audio o sube una imagen."
+            
+        # 2. Perform Multimodal Search
+        distances, indices = index.search(query_vector, 20)
+        
+        top_n_indices = indices[0]
+        top_n_scores = distances[0]
+        candidate_embeddings = image_embeddings[top_n_indices]
+        
+        # 3. Apply Intelligent Systems (A* Filter)
+        best_subset_local_indices = a_star_selection(query_vector, top_n_indices, top_n_scores, candidate_embeddings, k=5)
+        
+        # 4. Gather results for the UI Gallery
+        result_images = []
+        if best_subset_local_indices:
+            for local_idx in best_subset_local_indices:
+                global_idx = top_n_indices[local_idx]
+                path = image_paths[global_idx]
+                result_images.append(path)
+                
+        return result_images, status_message
 
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc()) # Lo imprime detallado en la terminal
+        return [], f"ERROR: {str(e)}"
 # GRADIO WEB INTERFACE
 
 with gr.Blocks(theme=gr.themes.Soft()) as demo:
