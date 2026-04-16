@@ -52,6 +52,15 @@ def get_text_embedding(query_text):
         text_features = text_features / text_features.norm(p=2, dim=-1, keepdim=True)
     return text_features.cpu().numpy().astype(np.float32)
 
+def get_image_embedding(input_image):
+    """Genera el embedding visual de la imagen de consulta."""
+    inputs = processor(images=input_image, return_tensors="pt", padding=True)
+    with torch.no_grad():
+        image_features = model.get_image_features(**inputs)
+        # L2 Normalization (vital para FAISS)
+        image_features = image_features / image_features.norm(p=2, dim=-1, keepdim=True)
+    return image_features.cpu().numpy().astype(np.float32)
+
 def calculate_diversity_penalty(new_img_idx, current_state_indices, candidate_embeddings):
     if not current_state_indices:
         return 0.0
