@@ -79,3 +79,39 @@ print(f"Found {len(valid_test_images)} valid images with captions.")
 random.seed(42) # Seed for reproducibility
 test_sample = random.sample(valid_test_images, min(SAMPLE_SIZE, len(valid_test_images)))
 
+# 6. Evaluation Loop
+print(f"\n--- Starting Evaluation: Recall@{TOP_K} on {len(test_sample)} random samples ---")
+hits = 0
+
+for target_image in tqdm(test_sample, desc="Evaluating"):
+    # Pick one random human caption for this image
+    caption = random.choice(image_to_captions[target_image])
+    
+    # Process the text query
+    query_vector = get_text_embedding(caption)
+    
+    # Search in FAISS
+    distances, indices = index.search(query_vector, TOP_K)
+    
+    # Check if the target_image is in the Top K results
+    target_found = False
+    for idx in indices[0]:
+        retrieved_path = image_paths[idx]
+        retrieved_filename = os.path.basename(retrieved_path)
+        
+        if retrieved_filename == target_image:
+            target_found = True
+            break
+            
+    if target_found:
+        hits += 1
+
+# 7. Final Results
+recall_score = (hits / len(test_sample)) * 100
+print("\n" + "="*50)
+print("FINAL EVALUATION RESULTS")
+print("="*50)
+print(f"Total Queries Evaluated: {len(test_sample)}")
+print(f"Successful Hits (Target image in Top {TOP_K}): {hits}")
+print(f"Recall@{TOP_K}: {recall_score:.2f}%")
+print("="*50)
