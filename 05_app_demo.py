@@ -45,18 +45,19 @@ print("All systems go! Launching UI...")
 # CORE LOGIC
 
 def get_text_embedding(query_text):
-    if isinstance(input_image, np.ndarray):
-        input_image = Image.fromarray(input_image)
-    if input_image.mode != "RGB":
-        input_image = input_image.convert("RGB")
-    inputs = processor(images=input_image, return_tensors="pt", padding=True)
+    """Generate the embedding of the text."""
+    dummy_image = Image.new('RGB', (224, 224), (0, 0, 0))
+    inputs = processor(text=[query_text], images=dummy_image, return_tensors="pt", padding=True)
+    
     with torch.no_grad():
         text_features = model(**inputs).text_embeds
+        # L2 Normalization
         text_features = text_features / text_features.norm(p=2, dim=-1, keepdim=True)
+        
     return text_features.cpu().numpy().astype(np.float32)
 
 def get_image_embedding(input_image):
-    """Genera el embedding visual de la imagen de consulta."""
+    """Generate the visual embedding of the query image."""
     if isinstance(input_image, np.ndarray):
         input_image = Image.fromarray(input_image)
     if input_image.mode != "RGB":
